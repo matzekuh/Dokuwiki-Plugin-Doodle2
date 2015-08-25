@@ -420,27 +420,32 @@ class syntax_plugin_doodle extends DokuWiki_Syntax_Plugin
     function isAllowedToEditEntry($entryFullname) {
         global $INFO;
         global $auth;
-
+        
         if (empty($entryFullname)) return false;
         if (!isset($this->doodle["$entryFullname"])) return false;
         if ($this->params['closed']) return false;
         if (!$this->isLoggedIn()) return false;
-
+        
+        $allowFlag = false;
+        
         //check adminGroups
         if (!empty($this->params['adminGroups'])) {
             $adminGroups = explode('|', $this->params['adminGroups']); // array of adminGroups
             $usersGroups = $INFO['userinfo']['grps'];  // array of groups that the user is in
-            if (count(array_intersect($adminGroups, $usersGroups)) > 0) return true;
+            if (count(array_intersect($adminGroups, $usersGroups)) > 0) $allowFlag = true;
         }
         
         //check adminUsers
         if (!empty($this->params['adminUsers'])) {
             $adminUsers = explode('|', $this->params['adminUsers']);
-            return in_array($_SERVER['REMOTE_USER'], $adminUsers);
+            if(in_array($_SERVER['REMOTE_USER'], $adminUsers)) $allowFlag = true;
         }
         
         //check own entry
-        return strcasecmp(hsc($INFO['userinfo']['name']), $entryFullname) == 0;  // compare real name
+        if(strcasecmp(hsc($INFO['userinfo']['name']), $entryFullname) == 0) $allowFlag = true; // compare real name
+        
+        //return result
+        return $allowFlag;
     }
     
     /** 
